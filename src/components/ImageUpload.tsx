@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import Image from "next/image";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import type { CloudinaryImage } from "@/lib/cloudinary/config";
 
@@ -86,11 +87,13 @@ export default function ImageUpload({
 
       {/* Existing Image Preview */}
       {existingImage && (
-        <div className="mb-4">
-          <img
+        <div className="mb-4 relative w-32 h-32">
+          <Image
             src={existingImage.secure_url}
             alt="Current"
-            className="w-32 h-32 object-cover rounded-lg border border-gray-300 dark:border-gray-700"
+            fill
+            className="object-cover rounded-lg border border-gray-300 dark:border-gray-700"
+            sizes="128px"
           />
         </div>
       )}
