@@ -12,6 +12,14 @@ interface Experiment {
   protocol: Record<string, unknown>;
   status: "draft" | "active" | "completed" | "archived";
   version: number;
+  image?: {
+    public_id: string;
+    secure_url: string;
+  };
+  attachments?: Array<{
+    public_id: string;
+    secure_url: string;
+  }>;
   replicationAttempts?: Array<{
     attemptId: string;
     startedAt: string | Date;
