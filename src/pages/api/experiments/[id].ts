@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import connectDB from "@/lib/db/mongo";
 import Experiment from "@/models/Experiment";
+import User from "@/models/User";
 import { getTokenFromRequest, verifyToken } from "@/lib/auth/jwt";
 import mongoose from "mongoose";
 
