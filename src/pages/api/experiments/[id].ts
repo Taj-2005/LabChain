@@ -20,6 +20,12 @@ export default async function handler(
   try {
     await connectDB();
 
+    // Ensure User model is registered before using populate
+    if (!mongoose.models.User) {
+      // Force import/registration by accessing the model
+      void User;
+    }
+
     const token = getTokenFromRequest(req);
     if (!token) {
       return res.status(401).json({ error: "Unauthorized" });

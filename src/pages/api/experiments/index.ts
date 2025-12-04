@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import mongoose from "mongoose";
 import connectDB from "@/lib/db/mongo";
 import Experiment from "@/models/Experiment";
 import User from "@/models/User";
@@ -14,6 +15,13 @@ export default async function handler(
 
   try {
     await connectDB();
+
+    // Ensure User model is registered before using populate
+    // Access the model to force registration if not already registered
+    if (!mongoose.models.User) {
+      // Force import/registration by accessing the model
+      void User;
+    }
 
     const token = getTokenFromRequest(req);
     if (!token) {
@@ -83,6 +91,11 @@ export default async function handler(
           },
         ],
       });
+
+      // Ensure User model is registered before populate
+      if (!mongoose.models.User) {
+        void User;
+      }
 
       const populated = await Experiment.findById(experiment._id)
         .populate("owner", "name email")
