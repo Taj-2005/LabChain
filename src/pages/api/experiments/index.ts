@@ -61,7 +61,7 @@ export default async function handler(
 
     if (req.method === "POST") {
       // Create new experiment
-      const { title, protocol, status } = req.body;
+      const { title, protocol, status, image } = req.body;
 
       if (!title) {
         return res.status(400).json({ error: "Title is required" });
@@ -72,6 +72,7 @@ export default async function handler(
         title,
         protocol: protocol || {},
         status: status || "draft",
+        image: image || undefined,
         version: 1,
         versions: [
           {

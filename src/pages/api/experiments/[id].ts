@@ -71,7 +71,8 @@ export default async function handler(
       }
 
       // Update fields
-      const { title, protocol, status, notes, replicationAttempt } = req.body;
+      const { title, protocol, status, notes, replicationAttempt, image } =
+        req.body;
 
       if (title !== undefined) experiment.title = title;
       if (protocol !== undefined) {
@@ -86,6 +87,7 @@ export default async function handler(
         experiment.version += 1;
       }
       if (status !== undefined) experiment.status = status;
+      if (image !== undefined) experiment.image = image;
 
       // Handle replication attempt
       if (replicationAttempt) {

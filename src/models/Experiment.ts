@@ -1,10 +1,16 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
+export interface CloudinaryImage {
+  public_id: string;
+  secure_url: string;
+}
+
 export interface IExperiment extends Document {
   owner: mongoose.Types.ObjectId;
   title: string;
   protocol: Record<string, unknown>; // JSON protocol structure
-  attachments: mongoose.Types.ObjectId[];
+  image?: CloudinaryImage;
+  attachments: CloudinaryImage[];
   versions: Array<{
     version: number;
     protocol: Record<string, unknown>;
@@ -43,10 +49,14 @@ const ExperimentSchema = new Schema<IExperiment>(
       required: true,
       default: {},
     },
+    image: {
+      public_id: { type: String },
+      secure_url: { type: String },
+    },
     attachments: [
       {
-        type: Schema.Types.ObjectId,
-        ref: "Attachment",
+        public_id: { type: String, required: true },
+        secure_url: { type: String, required: true },
       },
     ],
     versions: [

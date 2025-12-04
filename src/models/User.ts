@@ -1,10 +1,16 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 import bcrypt from "bcryptjs";
 
+export interface CloudinaryImage {
+  public_id: string;
+  secure_url: string;
+}
+
 export interface IUser extends Document {
   email: string;
   password: string;
   name: string;
+  profileImage?: CloudinaryImage;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -30,6 +36,10 @@ const UserSchema = new Schema<IUser>(
       type: String,
       required: [true, "Name is required"],
       trim: true,
+    },
+    profileImage: {
+      public_id: { type: String },
+      secure_url: { type: String },
     },
   },
   {

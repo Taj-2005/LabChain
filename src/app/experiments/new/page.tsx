@@ -3,11 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/stores/useAuth";
+import ImageUpload from "@/components/ImageUpload";
+import type { CloudinaryImage } from "@/lib/cloudinary/config";
 
 export default function NewExperimentPage() {
   const { isAuthenticated, token } = useAuth();
   const router = useRouter();
   const [title, setTitle] = useState("");
+  const [image, setImage] = useState<CloudinaryImage | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -32,6 +35,7 @@ export default function NewExperimentPage() {
           title,
           protocol: {},
           status: "draft",
+          image: image || undefined,
         }),
       });
 
@@ -92,6 +96,15 @@ export default function NewExperimentPage() {
                 required
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter experiment title"
+              />
+            </div>
+
+            <div className="mb-4">
+              <ImageUpload
+                onUploadComplete={(img) => setImage(img)}
+                folder="experiments"
+                existingImage={image}
+                label="Experiment Image (Optional)"
               />
             </div>
 
