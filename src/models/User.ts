@@ -1,9 +1,4 @@
-import mongoose, {
-  Schema,
-  Document,
-  Model,
-  CallbackWithoutResultAndOptionalError,
-} from "mongoose";
+import mongoose, { Schema, Document, Model } from "mongoose";
 import bcrypt from "bcryptjs";
 
 export interface IUser extends Document {
@@ -43,18 +38,13 @@ const UserSchema = new Schema<IUser>(
 );
 
 // Hash password before saving
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(UserSchema as any).pre(
-  "save",
-  async function (this: IUser, next: CallbackWithoutResultAndOptionalError) {
-    if (!this.isModified("password")) {
-      return next();
-    }
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
+UserSchema.pre("save", async function (this: IUser) {
+  if (!this.isModified("password")) {
+    return;
   }
-);
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+});
 
 // Method to compare password
 UserSchema.methods.comparePassword = async function (

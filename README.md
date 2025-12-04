@@ -2,6 +2,8 @@
 
 A reproducibility and collaboration platform for scientific experiments. Share, replicate, and verify research with confidence.
 
+> 📖 **New to LabChain?** Check out the [USER_GUIDE.md](./USER_GUIDE.md) for a comprehensive guide on how to use the platform!
+
 ## Features
 
 - **User Authentication**: JWT-based authentication with email/password
