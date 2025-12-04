@@ -244,8 +244,21 @@ export default function ExperimentPage({
                       });
                       if (res.ok) {
                         const data = await res.json();
+                        if (data.verification) {
+                          alert(
+                            `✅ Verification stamp created!\n\nID: ${data.verification.id}\nHash: ${data.verification.hash?.substring(0, 20) || "N/A"}...\nTimestamp: ${data.verification.timestamp ? new Date(data.verification.timestamp).toLocaleString() : "N/A"}`
+                          );
+                        } else {
+                          alert(
+                            `✅ Verification created! ${data.message || ""}`
+                          );
+                        }
+                      } else {
+                        const errorData = await res
+                          .json()
+                          .catch(() => ({ error: "Unknown error" }));
                         alert(
-                          `Verification stamp created! ID: ${data.verification._id}`
+                          `❌ Failed to create verification: ${errorData.error || "Unknown error"}`
                         );
                       }
                     } catch (err) {
