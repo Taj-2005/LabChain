@@ -235,12 +235,52 @@ export default function ExperimentPage({
                       experiment.owner._id ||
                         (experiment.owner as { id?: string }).id
                     ) === useAuth.getState().user?.id && (
-                      <button
-                        onClick={() => setIsEditing(true)}
-                        className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-                      >
-                        ✏️ Edit
-                      </button>
+                      <>
+                        <button
+                          onClick={() => setIsEditing(true)}
+                          className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          onClick={async () => {
+                            if (
+                              !confirm(
+                                "Are you sure you want to delete this experiment? This action cannot be undone."
+                              )
+                            ) {
+                              return;
+                            }
+
+                            try {
+                              const res = await fetch(
+                                `/api/experiments/${id}`,
+                                {
+                                  method: "DELETE",
+                                  headers: {
+                                    Authorization: `Bearer ${token}`,
+                                  },
+                                }
+                              );
+
+                              if (res.ok) {
+                                router.push("/dashboard");
+                              } else {
+                                const errorData = await res.json();
+                                alert(
+                                  `Failed to delete experiment: ${errorData.error || "Unknown error"}`
+                                );
+                              }
+                            } catch (err) {
+                              console.error("Error deleting experiment:", err);
+                              alert("Failed to delete experiment");
+                            }
+                          }}
+                          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                        >
+                          🗑️ Delete
+                        </button>
+                      </>
                     )}
                   </>
                 )}
