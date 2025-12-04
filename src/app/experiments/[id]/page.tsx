@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/stores/useAuth";
 import { useExperiment } from "@/hooks/useExperiments";
 import { useSocket } from "@/hooks/useSocket";
-import ProtocolBuilder from "@/components/ProtocolBuilder";
+import ProtocolBuilderEnhanced from "@/components/ProtocolBuilderEnhanced";
 
 export default function ExperimentPage({
   params,
@@ -22,7 +22,7 @@ export default function ExperimentPage({
   const [editTitle, setEditTitle] = useState("");
   const [editStatus, setEditStatus] = useState<string>("");
   const [isEditingProtocol, setIsEditingProtocol] = useState(false);
-  const [protocolBlocks, setProtocolBlocks] = useState<
+  const [protocolBlocks] = useState<
     Array<{
       id: string;
       type: "step" | "note" | "measurement";
@@ -210,6 +210,12 @@ export default function ExperimentPage({
                 >
                   📓 Notebook
                 </button>
+                <button
+                  onClick={() => router.push(`/experiments/${id}/replications`)}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                >
+                  🔄 Replications
+                </button>
               </div>
             </div>
 
@@ -234,54 +240,22 @@ export default function ExperimentPage({
 
               {isEditingProtocol ? (
                 <div className="space-y-4">
-                  <ProtocolBuilder
-                    protocol={protocolBlocks}
-                    onChange={setProtocolBlocks}
+                  <ProtocolBuilderEnhanced
+                    experimentId={id}
+                    initialProtocol={protocolBlocks}
+                    initialVersion={experiment.version}
+                    onVersionChange={() => {
+                      mutate();
+                    }}
                   />
                   <div className="flex gap-2">
                     <button
-                      onClick={async () => {
-                        try {
-                          const res = await fetch(`/api/experiments/${id}`, {
-                            method: "PATCH",
-                            headers: {
-                              "Content-Type": "application/json",
-                              Authorization: `Bearer ${token}`,
-                            },
-                            body: JSON.stringify({
-                              protocol: {
-                                steps: protocolBlocks,
-                              },
-                              version: experiment.version,
-                            }),
-                          });
-                          if (res.ok) {
-                            await mutate();
-                            setIsEditingProtocol(false);
-                          }
-                        } catch (err) {
-                          console.error("Error updating protocol:", err);
-                        }
-                      }}
-                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                    >
-                      Save Protocol
-                    </button>
-                    <button
                       onClick={() => {
                         setIsEditingProtocol(false);
-                        // Reset to original
-                        if (experiment) {
-                          if (Array.isArray(experiment.protocol)) {
-                            setProtocolBlocks(experiment.protocol);
-                          } else {
-                            setProtocolBlocks([]);
-                          }
-                        }
                       }}
                       className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
                     >
-                      Cancel
+                      Close Editor
                     </button>
                   </div>
                 </div>
