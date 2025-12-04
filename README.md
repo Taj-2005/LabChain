@@ -1,36 +1,291 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LabChain
+
+A reproducibility and collaboration platform for scientific experiments. Share, replicate, and verify research with confidence.
+
+## Features
+
+- **User Authentication**: JWT-based authentication with email/password
+- **Experiment Management**: Create, read, update, and manage scientific experiments
+- **Protocol Builder**: Visual drag-and-drop interface for building experiment protocols
+- **Voice-to-Text Notes**: Hands-free note-taking using browser Web Speech API
+- **Real-time Collaboration**: Socket.io-based presence and collaboration features
+- **ML Integration**: Protocol standardization and transformation endpoints
+- **Verification Service**: Cryptographic hashing and signing for experiment verification
+- **Version Control**: Experiment versioning with conflict resolution
+
+## Tech Stack
+
+- **Frontend**: Next.js 16 (App Router), React 19, TypeScript
+- **Styling**: TailwindCSS
+- **State Management**: Zustand
+- **Data Fetching**: SWR
+- **Database**: MongoDB with Mongoose
+- **Real-time**: Socket.io (separate server)
+- **Authentication**: JWT
+- **Testing**: Jest, React Testing Library
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 20.x or later
+- MongoDB instance (local or Atlas)
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
+
+```bash
+git clone <repository-url>
+cd labchain
+```
+
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Create `.env.local` file:
+
+```env
+MONGODB_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/labchain?retryWrites=true&w=majority
+JWT_SECRET=your-strong-secret-key-change-in-production
+NEXT_PUBLIC_SOCKET_HOST=http://localhost:3001
+ML_SERVER_URL=http://localhost:5000
+NODE_ENV=development
+```
+
+4. Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Socket Server
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The socket server runs separately for real-time features:
 
-## Learn More
+1. Navigate to socket-server directory:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+cd socket-server
+npm install
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. Create `.env` file:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```env
+JWT_SECRET=your-strong-secret-key-must-match-frontend
+PORT=3001
+CORS_ORIGIN=http://localhost:3000
+```
 
-## Deploy on Vercel
+3. Run the socket server:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm start
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+For development with auto-reload:
+
+```bash
+npm run dev
+```
+
+## Project Structure
+
+```
+labchain/
+├── src/
+│   ├── app/              # Next.js app router pages
+│   ├── components/       # React components
+│   ├── hooks/            # Custom hooks (SWR, etc.)
+│   ├── lib/              # Utilities (db, auth, verification)
+│   ├── models/           # Mongoose models
+│   ├── pages/            # API routes
+│   └── stores/            # Zustand stores
+├── socket-server/        # Socket.io server (Express)
+├── ml-server/            # Optional Flask ML server
+├── .github/workflows/    # CI/CD workflows
+└── public/               # Static assets
+```
+
+## Environment Variables
+
+### Frontend/API (Next.js)
+
+- `MONGODB_URI`: MongoDB connection string
+- `JWT_SECRET`: Secret key for JWT signing
+- `NEXT_PUBLIC_SOCKET_HOST`: Socket server URL (public)
+- `ML_SERVER_URL`: ML server URL (optional)
+- `NODE_ENV`: Environment (development/production)
+
+### Socket Server
+
+- `JWT_SECRET`: Must match frontend JWT_SECRET
+- `PORT`: Server port (default: 3001)
+- `CORS_ORIGIN`: Allowed CORS origin
+
+## API Endpoints
+
+### Authentication
+
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login user
+- `GET /api/auth/me` - Get current user
+
+### Experiments
+
+- `GET /api/experiments` - List experiments (with pagination)
+- `POST /api/experiments` - Create experiment
+- `GET /api/experiments/[id]` - Get experiment
+- `PATCH /api/experiments/[id]` - Update experiment
+- `DELETE /api/experiments/[id]` - Delete experiment
+- `POST /api/experiments/[id]/notes` - Save notes (autosave)
+
+### ML
+
+- `POST /api/ml/standardize-protocol` - Standardize protocol text
+
+### Verification
+
+- `POST /api/verify/stamp` - Create verification stamp
+- `GET /api/verify/[id]` - Verify stamp
+
+## Deployment
+
+### Vercel (Frontend/API)
+
+1. Push code to GitHub
+2. Import project in Vercel
+3. Set environment variables in Vercel dashboard:
+   - `MONGODB_URI`
+   - `JWT_SECRET`
+   - `NEXT_PUBLIC_SOCKET_HOST` (your socket server URL)
+   - `ML_SERVER_URL` (optional)
+
+4. Deploy
+
+### Socket Server
+
+Deploy to Render, Heroku, Railway, or DigitalOcean:
+
+1. Set environment variables
+2. Ensure `CORS_ORIGIN` matches your Vercel URL
+3. Ensure `JWT_SECRET` matches frontend secret
+4. Deploy
+
+### ML Server (Optional)
+
+If using a separate Flask ML server:
+
+1. Deploy to Render/DigitalOcean
+2. Set `ML_SERVER_URL` in Vercel environment variables
+
+## Development
+
+### Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run format` - Format code with Prettier
+- `npm test` - Run tests
+
+### Code Quality
+
+- ESLint for linting
+- Prettier for formatting
+- Husky for pre-commit hooks
+- TypeScript for type safety
+
+## Testing
+
+Run tests with:
+
+```bash
+npm test
+```
+
+## Contributing
+
+1. Create a feature branch
+2. Make your changes
+3. Ensure `npm run build` and `npm run lint` pass
+4. Commit with meaningful messages
+5. Push and create a pull request
+
+## License
+
+[Your License Here]
+
+## Phase-by-Phase Changelog
+
+### Phase 0: Infrastructure
+
+- TailwindCSS setup
+- ESLint and Prettier configuration
+- Husky pre-commit hooks
+- Jest testing setup
+
+### Phase 1: Database & Auth
+
+- MongoDB connection helper
+- User model with password hashing
+- JWT authentication
+- Auth API endpoints (register/login/me)
+
+### Phase 2: Experiment CRUD
+
+- Experiment model with versions and replication attempts
+- CRUD API endpoints with pagination
+- Conflict resolution with version numbers
+
+### Phase 3: Frontend Skeleton
+
+- Zustand auth store
+- SWR hooks for data fetching
+- Login/Register pages
+- Dashboard with experiment list
+- Experiment detail page
+- Navigation component
+
+### Phase 4: Real-time Features
+
+- Socket.io server with Express
+- Presence tracking
+- Experiment room channels
+- Cursor updates
+- Experiment update broadcasts
+
+### Phase 5: Protocol Builder & Notebook
+
+- Visual protocol builder (drag-and-drop)
+- Voice-to-text note capture
+- Autosave functionality
+- ML transformation stub
+
+### Phase 6: ML Integration
+
+- Next.js API route for protocol standardization
+- Text parsing and structure extraction
+- Ready for external ML service integration
+
+### Phase 7: Verification Service
+
+- Cryptographic hashing (SHA-256)
+- ECDSA signing and verification
+- Verification model and API endpoints
+- Blockchain-ready structure
+
+### Phase 8: CI/CD & Documentation
+
+- GitHub Actions workflow
+- Vercel configuration
+- Comprehensive README
+- Low-level design documentation
