@@ -71,7 +71,7 @@ export default async function handler(
       }
 
       // Update fields
-      const { title, protocol, status, notes } = req.body;
+      const { title, protocol, status, notes, replicationAttempt } = req.body;
 
       if (title !== undefined) experiment.title = title;
       if (protocol !== undefined) {
@@ -86,6 +86,22 @@ export default async function handler(
         experiment.version += 1;
       }
       if (status !== undefined) experiment.status = status;
+
+      // Handle replication attempt
+      if (replicationAttempt) {
+        experiment.replicationAttempts.push({
+          attemptId: replicationAttempt.attemptId || `attempt-${Date.now()}`,
+          experimenter: new mongoose.Types.ObjectId(payload.userId),
+          startedAt: replicationAttempt.startedAt
+            ? new Date(replicationAttempt.startedAt)
+            : new Date(),
+          completedAt: replicationAttempt.completedAt
+            ? new Date(replicationAttempt.completedAt)
+            : undefined,
+          results: replicationAttempt.results || undefined,
+          notes: replicationAttempt.notes || undefined,
+        });
+      }
 
       await experiment.save();
 

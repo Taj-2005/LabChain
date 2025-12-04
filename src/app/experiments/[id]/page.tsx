@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/stores/useAuth";
 import { useExperiment } from "@/hooks/useExperiments";
 import { useSocket } from "@/hooks/useSocket";
+import ProtocolBuilder from "@/components/ProtocolBuilder";
 
 export default function ExperimentPage({
   params,
@@ -20,6 +21,16 @@ export default function ExperimentPage({
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState("");
   const [editStatus, setEditStatus] = useState<string>("");
+  const [isEditingProtocol, setIsEditingProtocol] = useState(false);
+  const [protocolBlocks, setProtocolBlocks] = useState<
+    Array<{
+      id: string;
+      type: "step" | "note" | "measurement";
+      content: string;
+      order: number;
+    }>
+  >([]);
+  const [showReplicationForm, setShowReplicationForm] = useState(false);
 
   // Join experiment room when component mounts
   useEffect(() => {
@@ -203,12 +214,201 @@ export default function ExperimentPage({
             </div>
 
             <div className="mb-6">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                Protocol
-              </h2>
-              <pre className="bg-gray-50 dark:bg-gray-900 p-4 rounded border border-gray-200 dark:border-gray-700 overflow-auto">
-                {JSON.stringify(experiment.protocol, null, 2)}
-              </pre>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Protocol
+                </h2>
+                {!isEditingProtocol &&
+                  String(
+                    experiment.owner._id ||
+                      (experiment.owner as { id?: string }).id
+                  ) === useAuth.getState().user?.id && (
+                    <button
+                      onClick={() => setIsEditingProtocol(true)}
+                      className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    >
+                      ✏️ Edit Protocol
+                    </button>
+                  )}
+              </div>
+
+              {isEditingProtocol ? (
+                <div className="space-y-4">
+                  <ProtocolBuilder
+                    protocol={protocolBlocks}
+                    onChange={setProtocolBlocks}
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={async () => {
+                        try {
+                          const res = await fetch(`/api/experiments/${id}`, {
+                            method: "PATCH",
+                            headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `Bearer ${token}`,
+                            },
+                            body: JSON.stringify({
+                              protocol: {
+                                steps: protocolBlocks,
+                              },
+                              version: experiment.version,
+                            }),
+                          });
+                          if (res.ok) {
+                            await mutate();
+                            setIsEditingProtocol(false);
+                          }
+                        } catch (err) {
+                          console.error("Error updating protocol:", err);
+                        }
+                      }}
+                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                    >
+                      Save Protocol
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsEditingProtocol(false);
+                        // Reset to original
+                        if (experiment) {
+                          if (Array.isArray(experiment.protocol)) {
+                            setProtocolBlocks(experiment.protocol);
+                          } else {
+                            setProtocolBlocks([]);
+                          }
+                        }
+                      }}
+                      className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded border border-gray-200 dark:border-gray-700">
+                  {protocolBlocks.length > 0 ? (
+                    <div className="space-y-3">
+                      {protocolBlocks
+                        .sort((a, b) => a.order - b.order)
+                        .map((block, index) => (
+                          <div
+                            key={block.id || index}
+                            className="p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700"
+                          >
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-sm font-medium text-gray-500">
+                                {index + 1}.
+                              </span>
+                              <span
+                                className={`px-2 py-1 text-xs font-medium rounded ${
+                                  block.type === "step"
+                                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                                    : block.type === "note"
+                                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                      : "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+                                }`}
+                              >
+                                {block.type}
+                              </span>
+                            </div>
+                            <p className="text-gray-900 dark:text-white">
+                              {block.content}
+                            </p>
+                          </div>
+                        ))}
+                    </div>
+                  ) : (
+                    <pre className="text-sm overflow-auto">
+                      {JSON.stringify(experiment.protocol, null, 2)}
+                    </pre>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Replication Attempts Section */}
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Replication Attempts
+                </h2>
+                <button
+                  onClick={() => setShowReplicationForm(!showReplicationForm)}
+                  className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700"
+                >
+                  {showReplicationForm ? "Cancel" : "+ New Replication"}
+                </button>
+              </div>
+
+              {showReplicationForm && (
+                <ReplicationForm
+                  experimentId={id}
+                  token={token || ""}
+                  onSuccess={async () => {
+                    await mutate();
+                    setShowReplicationForm(false);
+                  }}
+                />
+              )}
+
+              {experiment.replicationAttempts &&
+              experiment.replicationAttempts.length > 0 ? (
+                <div className="space-y-3">
+                  {experiment.replicationAttempts.map((attempt, index) => (
+                    <div
+                      key={attempt.attemptId || index}
+                      className="p-4 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            Attempt {index + 1}
+                          </p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Started:{" "}
+                            {new Date(attempt.startedAt).toLocaleString()}
+                          </p>
+                          {attempt.completedAt && (
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              Completed:{" "}
+                              {new Date(attempt.completedAt).toLocaleString()}
+                            </p>
+                          )}
+                        </div>
+                        <span
+                          className={`px-2 py-1 text-xs rounded ${
+                            attempt.completedAt
+                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                              : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                          }`}
+                        >
+                          {attempt.completedAt ? "Completed" : "In Progress"}
+                        </span>
+                      </div>
+                      {attempt.notes && (
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
+                          {attempt.notes}
+                        </p>
+                      )}
+                      {attempt.results && (
+                        <details className="mt-2">
+                          <summary className="text-sm text-blue-600 dark:text-blue-400 cursor-pointer">
+                            View Results
+                          </summary>
+                          <pre className="mt-2 text-xs bg-white dark:bg-gray-800 p-2 rounded overflow-auto">
+                            {JSON.stringify(attempt.results, null, 2)}
+                          </pre>
+                        </details>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 dark:text-gray-400 text-sm">
+                  No replication attempts yet.
+                </p>
+              )}
             </div>
 
             <div className="flex justify-between items-center mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
@@ -275,5 +475,109 @@ export default function ExperimentPage({
         </div>
       </div>
     </div>
+  );
+}
+
+// Replication Form Component
+function ReplicationForm({
+  experimentId,
+  token,
+  onSuccess,
+}: {
+  experimentId: string;
+  token: string;
+  onSuccess: () => void;
+}) {
+  const [notes, setNotes] = useState("");
+  const [results, setResults] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch(`/api/experiments/${experimentId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          replicationAttempt: {
+            attemptId: `attempt-${Date.now()}`,
+            startedAt: new Date().toISOString(),
+            notes: notes || undefined,
+            results: results ? JSON.parse(results) : undefined,
+          },
+          version: 0, // Will be handled by server
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to create replication attempt");
+      }
+
+      onSuccess();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to create replication attempt"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="mb-4 p-4 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700"
+    >
+      {error && (
+        <div className="mb-3 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 rounded text-sm">
+          {error}
+        </div>
+      )}
+      <div className="space-y-3">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Notes
+          </label>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Enter notes about this replication attempt..."
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            rows={3}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Results (JSON format, optional)
+          </label>
+          <textarea
+            value={results}
+            onChange={(e) => setResults(e.target.value)}
+            placeholder='{"key": "value"}'
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-mono text-sm"
+            rows={4}
+          />
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+          >
+            {isSubmitting ? "Creating..." : "Create Replication"}
+          </button>
+        </div>
+      </div>
+    </form>
   );
 }

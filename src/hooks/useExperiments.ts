@@ -12,6 +12,13 @@ interface Experiment {
   protocol: Record<string, unknown>;
   status: "draft" | "active" | "completed" | "archived";
   version: number;
+  replicationAttempts?: Array<{
+    attemptId: string;
+    startedAt: string | Date;
+    completedAt?: string | Date;
+    notes?: string;
+    results?: Record<string, unknown>;
+  }>;
   createdAt: string;
   updatedAt: string;
 }
