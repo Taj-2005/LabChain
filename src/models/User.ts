@@ -43,8 +43,8 @@ const UserSchema = new Schema<IUser>(
 );
 
 // Hash password before saving
-// @ts-expect-error - Mongoose pre hook typing issue
-UserSchema.pre(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(UserSchema as any).pre(
   "save",
   async function (this: IUser, next: CallbackWithoutResultAndOptionalError) {
     if (!this.isModified("password")) {
