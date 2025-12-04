@@ -2,10 +2,13 @@
 
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
 import { useAuth } from "@/stores/useAuth";
 import { useExperiment } from "@/hooks/useExperiments";
 import { useSocket } from "@/hooks/useSocket";
 import ProtocolBuilderEnhanced from "@/components/ProtocolBuilderEnhanced";
+import ImageUpload from "@/components/ImageUpload";
 
 export default function ExperimentPage({
   params,
@@ -104,6 +107,43 @@ export default function ExperimentPage({
           )}
 
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            {/* Experiment Image Section */}
+            {String(
+              experiment.owner._id || (experiment.owner as { id?: string }).id
+            ) === useAuth.getState().user?.id && (
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                  Experiment Image
+                </h2>
+                <ImageUpload
+                  onUploadComplete={async (img) => {
+                    if (!token) return;
+                    try {
+                      const res = await fetch(`/api/experiments/${id}`, {
+                        method: "PATCH",
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${token}`,
+                        },
+                        body: JSON.stringify({
+                          image: img,
+                          version: experiment.version,
+                        }),
+                      });
+                      if (res.ok) {
+                        await mutate();
+                      }
+                    } catch (err) {
+                      console.error("Error updating image:", err);
+                    }
+                  }}
+                  folder="experiments"
+                  existingImage={experiment.image}
+                  label="Upload Experiment Image (Optional)"
+                />
+              </div>
+            )}
+
             <div className="flex justify-between items-start mb-6">
               <div className="flex-1">
                 {isEditing ? (
@@ -224,18 +264,28 @@ export default function ExperimentPage({
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   Protocol
                 </h2>
-                {!isEditingProtocol &&
-                  String(
-                    experiment.owner._id ||
-                      (experiment.owner as { id?: string }).id
-                  ) === useAuth.getState().user?.id && (
-                    <button
-                      onClick={() => setIsEditingProtocol(true)}
-                      className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                    >
-                      ✏️ Edit Protocol
-                    </button>
-                  )}
+                <div className="flex gap-2">
+                  {!isEditingProtocol &&
+                    String(
+                      experiment.owner._id ||
+                        (experiment.owner as { id?: string }).id
+                    ) === useAuth.getState().user?.id && (
+                      <>
+                        <Link
+                          href={`/protocols/${id}/builder`}
+                          className="px-3 py-1 text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700"
+                        >
+                          🎨 Visual Builder
+                        </Link>
+                        <button
+                          onClick={() => setIsEditingProtocol(true)}
+                          className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                        >
+                          ✏️ Edit Protocol
+                        </button>
+                      </>
+                    )}
+                </div>
               </div>
 
               {isEditingProtocol ? (
@@ -300,6 +350,91 @@ export default function ExperimentPage({
                 </div>
               )}
             </div>
+
+            {/* Attachments Section */}
+            {String(
+              experiment.owner._id || (experiment.owner as { id?: string }).id
+            ) === useAuth.getState().user?.id && (
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                  Attachments
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
+                  {experiment.attachments?.map((attachment, index) => (
+                    <div
+                      key={attachment.public_id || index}
+                      className="relative group"
+                    >
+                      <div className="relative w-full h-32">
+                        <Image
+                          src={attachment.secure_url}
+                          alt={`Attachment ${index + 1}`}
+                          fill
+                          className="object-cover rounded-md border border-gray-300 dark:border-gray-700"
+                          sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        />
+                      </div>
+                      <button
+                        onClick={async () => {
+                          if (!token) return;
+                          try {
+                            const updatedAttachments =
+                              experiment.attachments?.filter(
+                                (a) => a.public_id !== attachment.public_id
+                              ) || [];
+                            const res = await fetch(`/api/experiments/${id}`, {
+                              method: "PATCH",
+                              headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${token}`,
+                              },
+                              body: JSON.stringify({
+                                attachments: updatedAttachments,
+                                version: experiment.version,
+                              }),
+                            });
+                            if (res.ok) {
+                              await mutate();
+                            }
+                          } catch (err) {
+                            console.error("Error deleting attachment:", err);
+                          }
+                        }}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <ImageUpload
+                  onUploadComplete={async (img) => {
+                    if (!token) return;
+                    try {
+                      const currentAttachments = experiment.attachments || [];
+                      const res = await fetch(`/api/experiments/${id}`, {
+                        method: "PATCH",
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${token}`,
+                        },
+                        body: JSON.stringify({
+                          attachments: [...currentAttachments, img],
+                          version: experiment.version,
+                        }),
+                      });
+                      if (res.ok) {
+                        await mutate();
+                      }
+                    } catch (err) {
+                      console.error("Error adding attachment:", err);
+                    }
+                  }}
+                  folder={`experiments/${id}/attachments`}
+                  label="Add Attachment"
+                />
+              </div>
+            )}
 
             {/* Replication Attempts Section */}
             <div className="mb-6">
