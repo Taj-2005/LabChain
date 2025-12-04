@@ -305,15 +305,16 @@ interface AuthState {
 
 ## ML Integration
 
-### Lightweight (Recommended for MVP)
-
-**Next.js API Routes:**
+**Next.js API Routes (Serverless):**
 
 - Call external APIs (OpenAI, Hugging Face)
-- Stateless, serverless
+- Stateless, serverless functions
 - No infrastructure overhead
+- Scales automatically with Vercel
 
-**Example:**
+**Implementation:**
+
+All ML processing happens through Next.js API routes at `/api/ml/*`:
 
 ```typescript
 // /api/ml/standardize-protocol
@@ -324,24 +325,13 @@ const response = await fetch("https://api.openai.com/v1/...", {
 });
 ```
 
-### Heavy ML (Separate Server)
+**Benefits:**
 
-**Flask Server:**
-
-- Persistent models
-- GPU acceleration
-- Long-running inference
-
-**Endpoints:**
-
-- `POST /predict/standardize` - Standardize protocol
-- `GET /health` - Health check
-
-**Deployment:**
-
-- Docker container
-- Host on Render/DigitalOcean
-- Secure with API key
+- No separate server to maintain
+- Automatic scaling
+- Pay-per-use (serverless)
+- Easy integration with external ML services
+- Can be extended to call any ML API
 
 ## Verification & Blockchain
 
@@ -419,7 +409,6 @@ Experiment → Hash → Sign → Store in DB → (Future) Anchor to Blockchain
 - `MONGODB_URI`
 - `JWT_SECRET`
 - `NEXT_PUBLIC_SOCKET_HOST`
-- `ML_SERVER_URL` (optional)
 - `REDIS_URL` (optional, for caching)
 
 **Socket Server:**

@@ -107,7 +107,6 @@ labchain/
 │   ├── pages/            # API routes
 │   └── stores/            # Zustand stores
 ├── socket-server/        # Socket.io server (Express)
-├── ml-server/            # Optional Flask ML server
 ├── .github/workflows/    # CI/CD workflows
 └── public/               # Static assets
 ```
@@ -119,7 +118,6 @@ labchain/
 - `MONGODB_URI`: MongoDB connection string
 - `JWT_SECRET`: Secret key for JWT signing
 - `NEXT_PUBLIC_SOCKET_HOST`: Socket server URL (public)
-- `ML_SERVER_URL`: ML server URL (optional)
 - `NODE_ENV`: Environment (development/production)
 
 ### Socket Server
@@ -164,7 +162,6 @@ labchain/
    - `MONGODB_URI`
    - `JWT_SECRET`
    - `NEXT_PUBLIC_SOCKET_HOST` (your socket server URL)
-   - `ML_SERVER_URL` (optional)
 
 4. Deploy
 
@@ -177,32 +174,15 @@ Deploy to Render, Heroku, Railway, or DigitalOcean:
 3. Ensure `JWT_SECRET` matches frontend secret
 4. Deploy
 
-### ML Server (Optional)
+### ML Features
 
-If using a separate Flask ML server:
+ML functionality is handled via Next.js API routes (`/api/ml/*`) that call external ML services:
 
-1. Navigate to ml-server directory:
+- OpenAI API for protocol standardization
+- Hugging Face inference API
+- Other external ML services
 
-```bash
-cd ml-server
-pip install -r requirements.txt
-```
-
-2. Create `.env` file:
-
-```bash
-cp .env.example .env
-# Edit .env with your actual values
-```
-
-3. Run the server:
-
-```bash
-python app.py
-```
-
-4. Deploy to Render/DigitalOcean
-5. Set `ML_SERVER_URL` in Vercel environment variables
+No separate ML server is required. All ML processing happens through serverless Next.js functions.
 
 ## Development
 

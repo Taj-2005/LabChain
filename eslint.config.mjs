@@ -14,7 +14,6 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "jest.config.js",
     "socket-server/**",
-    "ml-server/**",
   ]),
 ]);
 

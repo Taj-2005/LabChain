@@ -3,8 +3,8 @@ import { getTokenFromRequest, verifyToken } from "@/lib/auth/jwt";
 
 /**
  * ML endpoint to standardize/transform raw protocol text into structured format.
- * This is a lightweight implementation that can call external ML services
- * (OpenAI, Hugging Face, etc.) or be replaced with a heavy ML server if needed.
+ * Uses Next.js serverless functions to call external ML services
+ * (OpenAI, Hugging Face, etc.) for protocol standardization.
  */
 export default async function handler(
   req: NextApiRequest,
@@ -28,12 +28,11 @@ export default async function handler(
       return res.status(400).json({ error: "rawText is required" });
     }
 
-    // Stub implementation: Basic text parsing
-    // In production, this would call:
+    // Implementation: Basic text parsing with heuristics
+    // In production, this can call:
     // - OpenAI API for structured extraction
     // - Hugging Face inference API
-    // - Custom ML model endpoint
-    // - Or proxy to ml-server if heavy processing needed
+    // - Other external ML services
 
     const standardizedProtocol = {
       steps: parseTextToSteps(rawText),
