@@ -181,8 +181,28 @@ Deploy to Render, Heroku, Railway, or DigitalOcean:
 
 If using a separate Flask ML server:
 
-1. Deploy to Render/DigitalOcean
-2. Set `ML_SERVER_URL` in Vercel environment variables
+1. Navigate to ml-server directory:
+
+```bash
+cd ml-server
+pip install -r requirements.txt
+```
+
+2. Create `.env` file:
+
+```bash
+cp .env.example .env
+# Edit .env with your actual values
+```
+
+3. Run the server:
+
+```bash
+python app.py
+```
+
+4. Deploy to Render/DigitalOcean
+5. Set `ML_SERVER_URL` in Vercel environment variables
 
 ## Development
 
