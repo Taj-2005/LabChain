@@ -49,13 +49,11 @@ npm install
 
 3. Create `.env.local` file:
 
-```env
-MONGODB_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/labchain?retryWrites=true&w=majority
-JWT_SECRET=your-strong-secret-key-change-in-production
-NEXT_PUBLIC_SOCKET_HOST=http://localhost:3001
-ML_SERVER_URL=http://localhost:5000
-NODE_ENV=development
+```bash
+cp .env.example .env.local
 ```
+
+Then edit `.env.local` and fill in your actual values. See `.env.example` for all required environment variables.
 
 4. Run the development server:
 
@@ -78,11 +76,11 @@ npm install
 
 2. Create `.env` file:
 
-```env
-JWT_SECRET=your-strong-secret-key-must-match-frontend
-PORT=3001
-CORS_ORIGIN=http://localhost:3000
+```bash
+cp .env.example .env
 ```
+
+Then edit `.env` and fill in your actual values. **Important**: The `JWT_SECRET` must match the one in your Next.js `.env.local` file.
 
 3. Run the socket server:
 
